@@ -1,9 +1,5 @@
-# backlog_refinement_agent/cli.py
-
 from typing import List
-
 import pandas as pd
-
 from .config import settings
 from .jira_client import fetch_issues_from_jira, post_comment_to_jira
 from .slack_client import post_summary_to_slack
@@ -12,7 +8,6 @@ from .refinement import evaluate_story
 
 def _load_stories() -> pd.DataFrame:
     """
-    Either fetch from Jira or from a local CSV, depending on USE_JIRA.
     Returns a pandas DataFrame with at least:
       - id
       - summary
@@ -22,18 +17,9 @@ def _load_stories() -> pd.DataFrame:
       - present_fields
     """
     if settings.jira.use_jira:
-        print("🔄 Fetching issues from Jira...")
+        print("Fetching issues from Jira...")
         df = fetch_issues_from_jira()
-
-        print(f"📌 Total issues fetched: {len(df)}")
-        for _, row in df.iterrows():
-            print(f"   - {row.get('id', 'N/A')} | {row.get('summary', '')}")
-
         return df
-
-    # Local CSV mode
-    print(f"📄 Loading issues from local CSV: {settings.jira.local_file}")
-    df = pd.read_csv(settings.jira.local_file)
 
     # Generate present_fields if not present
     if "present_fields" not in df.columns:
@@ -63,7 +49,7 @@ def main() -> None:
 
         issues, explanations, ac_suggestion = evaluate_story(story, present_fields)
 
-        # --- Explicit Missing Component logic based on Jira data ---
+        # Explicit Missing Component logic based on Jira data
         components_val = story.get("components", "")
         has_components = bool(str(components_val).strip())
 
@@ -77,7 +63,7 @@ def main() -> None:
                     "Please assign an appropriate component for better traceability.",
                 )
         else:
-            # Components are present → make sure we don't incorrectly flag it
+            # Components are present 
             if "Missing Component" in issues:
                 issues = [i for i in issues if i != "Missing Component"]
                 explanations.pop("Missing Component", None)
@@ -89,8 +75,6 @@ def main() -> None:
 
         flagged_count += 1
 
-        print(f"\n🚩 Flagged Count: {flagged_count}, Story: {story_id}")
-        print("Issues:", issues)
         print("Explanations:", explanations)
         if ac_suggestion:
             print("Suggested AC:\n", ac_suggestion)
@@ -98,20 +82,17 @@ def main() -> None:
         reporter_name = story.get("reporter", "")
         account_id = story.get("account_id", "")
 
-        # ====================================================
-        # JIRA COMMENT: Same structure as desired Slack format
-        # ====================================================
+
+        # Jira comment
         comment_lines: List[str] = []
 
-        # Overall header
         comment_lines.append("Backlog Refinement Summary")
         header_line = f"- {story_id}"
         if reporter_name:
             header_line += f" (reported by {reporter_name})"
         comment_lines.append(header_line)
-        comment_lines.append("")  # blank line
 
-        # Per-issue analysis
+    
         for issue in issues:
             comment_lines.append(f"  - {issue}")
 
@@ -137,7 +118,7 @@ def main() -> None:
             else:
                 comment_lines.append("      (no explanation available)")
 
-            # --- Add AC SUGGESTION ONLY under 'Acceptance Criteria Analysis' ---
+            # Add Suggested acceptance criteria
             if issue_lower.startswith("acceptance") and ac_suggestion:
                 comment_lines.append("      Suggested Acceptance Criteria:")
                 for line in str(ac_suggestion).splitlines():
@@ -166,9 +147,7 @@ def main() -> None:
             account_id=account_id,
         )
 
-        # ====================================================
-        # SLACK SUMMARY: keep the previous structure you liked
-        # ====================================================
+        #Slack Summary
         slack_lines: List[str] = []
 
         first_line = f"- {story_id}"
@@ -206,17 +185,14 @@ def main() -> None:
             else:
                 slack_lines.append("      (no explanation available)")
 
-            # ▬▬▬ Add a blank line after each issue block ▬▬▬
+
             slack_lines.append("")
 
 
         slack_summary_blocks.append("\n".join(slack_lines))
 
-    # --------------------------------------------------------
-    # Final Slack summary message
-    # --------------------------------------------------------
     if not slack_summary_blocks:
-        post_summary_to_slack("✅ No issues flagged in the backlog refinement run.")
+        post_summary_to_slack("No issues flagged in the backlog refinement run.")
     else:
         slack_message = (
             "*Backlog Refinement Summary*\n"
@@ -225,8 +201,7 @@ def main() -> None:
         )
         post_summary_to_slack(slack_message)
 
-    print("\n✅ Backlog refinement run complete.")
-
+    print("\nBacklog refinement run complete.")
 
 if __name__ == "__main__":
     main()

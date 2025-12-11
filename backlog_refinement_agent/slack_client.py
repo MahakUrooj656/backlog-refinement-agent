@@ -1,4 +1,3 @@
-# backlog_refinement_agent/slack_client.py
 from typing import Union
 import json
 import requests
@@ -13,6 +12,6 @@ def post_summary_to_slack(message: str):
     try:
         response = requests.post(settings.slack.webhook_url, json=payload)
         response.raise_for_status()
-        print("✅ Slack webhook message posted successfully.")
+        print("Slack webhook message posted successfully.")
     except requests.exceptions.RequestException as e:
-        print(f"⚠️ Failed to send message to Slack via webhook: {e}")
+        print(f"Failed to send message to Slack via webhook: {e}")

@@ -1,4 +1,3 @@
-# backlog_refinement_agent/refinement.py
 from typing import Dict, Any, List, Tuple
 
 from .llm_client import (
@@ -40,7 +39,7 @@ def evaluate_story(story: Dict[str, Any], present_fields: List[str]) -> Tuple[Li
     explanations = {}
     ac_suggestion = ""
 
-    # --- Summary Analysis ---
+    # Summary analysis
     if "summary" in present_fields:
         summary = story.get("summary", "")
         if not summary.strip():
@@ -48,11 +47,11 @@ def evaluate_story(story: Dict[str, Any], present_fields: List[str]) -> Tuple[Li
         else:
             is_vague, explanation = is_vague_summary_with_llm(summary)
             if is_vague:
-                # issues.append("Summary Analysis:\nVague or unclear summary")
+            
                 issues.append("Summary Analysis")
                 explanations["summary"] = explanation
 
-    # --- Description Analysis ---
+    # Description analysis
     if "description" in present_fields:
         description = story.get("description", "")
         if not description.strip():
@@ -69,15 +68,15 @@ def evaluate_story(story: Dict[str, Any], present_fields: List[str]) -> Tuple[Li
                 # Generate Suggested AC only when description is flagged
                 summary = story.get("summary", "")
                 ac_suggestion = suggest_acceptance_criteria_with_llm(summary, description)
-                # print ("Suggested Acceptance Criteria:", ac_suggestion)
+        
 
-    # --- Fix Version Check ---
+    # Fix version check
     if "fixVersions" in present_fields:
         fixVersions = story.get("fixVersions", "")
         if isinstance(fixVersions, str) and not fixVersions.strip():
             issues.append("Missing target version")
 
-    # --- Component Check ---
+    # Component check
     if "components" in present_fields:
         component = story.get("component", "")
         if isinstance(component, str) and not component.strip():

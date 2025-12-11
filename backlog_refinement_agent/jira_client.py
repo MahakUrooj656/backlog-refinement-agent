@@ -42,7 +42,6 @@ def post_comment_to_jira(issue_key: str, comment_lines: list[str], reporter_name
             "content": [{"type": "text", "text": line}]
         })
 
-    # Create payload
     payload = {
         "body": {
             "type": "doc",
@@ -61,23 +60,19 @@ def post_comment_to_jira(issue_key: str, comment_lines: list[str], reporter_name
     response = requests.post(url, headers=headers, json=payload, auth=auth)
 
     if response.status_code == 201:
-        print(f"✅ Comment posted to Jira ticket: {issue_key}")
+        print(f"Comment posted to Jira ticket: {issue_key}")
     else:
-        print(f"❌ Failed to post comment to {issue_key}")
+        print(f"Failed to post comment to {issue_key}")
         print(f"Status: {response.status_code}")
         print("Response:", response.text)
 
 
-#------
     
 def fetch_issues_from_jira(
     project_key: Optional[str] = None,
     max_results: Optional[int] = None,
 ) -> pd.DataFrame:
-    """
-    Runs a JQL query against Jira Cloud using the new /rest/api/3/search/jql endpoint
-    and returns a DataFrame of parsed issues.
-    """
+
 
     project_key = project_key or settings.jira.project_key
     max_results =max_results or settings.jira.max_results
@@ -90,7 +85,6 @@ def fetch_issues_from_jira(
         f"AND Sprint is EMPTY ORDER BY created DESC"
     )
 
-    # New endpoint (note: base_url should be like https://your-site.atlassian.net)
     url = f"{settings.jira.base_url}/rest/api/3/search/jql"
 
     headers = {
@@ -99,7 +93,6 @@ def fetch_issues_from_jira(
     }
     auth = HTTPBasicAuth(settings.jira.email, settings.jira.api_token)
 
-    # ✅ Use POST with JSON body (recommended by Atlassian)
     payload = {
         "jql": jql_query,
         "maxResults": max_results,
@@ -114,10 +107,6 @@ def fetch_issues_from_jira(
     }
 
     response = requests.post(url, headers=headers, auth=auth, json=payload)
-    print("🌐 Jira HTTP status:", response.status_code)
-    # Print a small slice of the raw JSON for inspection
-    print("🧾 Raw response (first 400 chars):")
-    print(response.text[:400])
     
     if response.status_code != 200:
         raise Exception(
@@ -126,17 +115,12 @@ def fetch_issues_from_jira(
 
     data = response.json()
     total = data.get("total")
-    issues_list = data.get("issues", [])
-    print(f"📊 Jira API says total issues = {total}")
-    print(f"🐛 Issues array length = {len(issues_list)}")
     
     parsed_issues = []
 
     # For the new endpoint, issues are still under "issues"x
     for issue in data.get("issues", []):
         fields = issue.get("fields", {})
-        print("🐛 DEBUG FIELDS FOR ISSUE", issue.get("key"), fields.keys())
-        print("🐛 Components raw value:", fields.get("components"))
 
         issue_id = issue.get("key")
         summary = fields.get("summary", "") or ""

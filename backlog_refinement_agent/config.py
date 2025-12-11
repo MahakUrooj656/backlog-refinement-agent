@@ -8,9 +8,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# -----------------------------
-# Jira Configuration
-# -----------------------------
 @dataclass
 class JiraConfig:
     use_jira: bool = os.getenv("USE_JIRA", "1") == "1"
@@ -22,25 +19,14 @@ class JiraConfig:
     local_file: str = os.getenv("LOCAL_FILE", "backlog.csv")
 
 
-# -----------------------------
-# Slack Configuration
-# -----------------------------
 @dataclass
 class SlackConfig:
     webhook_url: str = os.getenv("SLACK_WEBHOOK_URL", "")
 
-
-# -----------------------------
-# OpenAI Configuration
-# -----------------------------
 @dataclass
 class OpenAIConfig:
     api_key: str = os.getenv("OPENAI_API_KEY", "")
 
-
-# -----------------------------
-# Bundle everything together
-# -----------------------------
 @dataclass
 class Settings:
     jira: JiraConfig = field(default_factory=JiraConfig)

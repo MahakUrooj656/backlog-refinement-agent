@@ -1,4 +1,3 @@
-# backlog_refinement_agent/llm_client.py
 from typing import Tuple
 from openai import OpenAI
 
@@ -24,7 +23,7 @@ def is_vague_summary_with_llm(summary: str) -> tuple[bool, str]:
         user_prompt = f"Summary: {summary.strip()}"
 
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # or gpt-4o if preferred
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -75,7 +74,7 @@ def is_valid_acceptance_criteria_with_llm(description: str) -> tuple[bool, str]:
         return is_incomplete, content
 
     except Exception as e:
-        print("⚠️ LLM description evaluation failed:", e)
+        print("LLM description evaluation failed:", e)
         return False, "LLM evaluation failed."
 
 
@@ -110,5 +109,5 @@ Description: {description.strip()}
         return content
 
     except Exception as e:
-        print("⚠️ LLM acceptance criteria suggestion failed:", e)
+        print("LLM acceptance criteria suggestion failed:", e)
         return "(Suggestion failed due to LLM error)"
